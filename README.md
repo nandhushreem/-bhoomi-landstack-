@@ -1,20 +1,37 @@
 # Bhoomi · Land Stack
 
-A functioning SIH26014 demonstration of parcel-centric land governance. Synthetic data only; no government affiliation or title certification.
+**[Open the live application](https://bhoomi-landstack.onrender.com)** · **[User guide](https://bhoomi-landstack.onrender.com/#guide)**
 
-Live application: https://bhoomi-landstack.onrender.com
+Version 2 is a functional SIH26014 prototype connecting parcel records, citizen services, departmental reviews and mock source systems. All land data is synthetic. No government affiliation, legal-title certification or real government transactions are claimed.
 
-## Features
-- 60 clickable GeoJSON parcels across an urban ward and rural village; parcel ID, survey and rights-holder search; zoning and risk layers.
-- Linked sample rights, registration, encumbrance, building-permission and fiscal records with source metadata.
-- Citizen signup/sign-in, demo citizen and officer sessions, private application tracking.
-- Area correction, ownership enquiry and building-permission enquiry services.
-- Officer approval/rejection with mandatory reasons, dispute acknowledgement, atomic record changes, immutable application decisions and append-only API audit history.
-- Optimistic parcel versions and database row locks protect against conflicting decisions.
-- Governance statistics, explainable checks, JSON export and responsive layouts.
+## What you can demonstrate
+
+- 180 seeded parcels across urban/rural pilots in Karnataka, Tamil Nadu and Andhra Pradesh. Existing pilot records are preserved; imports add to this count.
+- Searchable maps, land-use/risk layers, restriction and utility overlays, bookmarks, linked records, history, spatial intersection checks and GeoJSON/summary exports.
+- Citizen signup/login, eight land services, tracking receipts, notifications and withdrawal before first review.
+- Registration → Revenue → Tax workflow. Registration approval does not mutate ownership; the Revenue stage changes the synthetic rights holder and record version. Fiscal acknowledgement completes the request.
+- Planning → Tax building-permission workflow, conservation checks, dispute reporting/resolution and fiscal review.
+- Server-enforced department and state permissions. Demo officer access is public by design.
+- Configurable sample state adapters, hectare/acre conversion, validation preview and atomic JSON import without overwriting existing records.
+- Durable departmental delivery events, outage simulation, retry, duplicate-delivery protection and source-version protection.
+- Explainable cross-source area/rights-holder comparisons, governance statistics and exportable findings.
+- Experimental OGC-style feature discovery, GeoJSON queries, bounding-box filters and pagination. No formal OGC conformance/certification claim.
+- Built-in, printable user guide and a four-page PDF guide.
+
+## Try it
+
+1. Select **Enter workspace → Citizen demo**. Choose **URB-002** in Karnataka's urban pilot and request **Registration & mutation** with a new sample rights holder.
+2. Keep the citizen window open. Use a separate private/incognito browser window for officers.
+3. Select **Registration** in Demo department, then **Officer demo**. Find the tracking reference and approve with a reason.
+4. Use **Switch workspace** to enter Revenue, then Tax & valuation, and complete the next tasks.
+5. Return to the citizen, refresh, and inspect the timeline, notifications and parcel history.
+6. As Platform administrator, demonstrate Data exchange and Department sync.
+
+Demo sessions last 24 hours. Switching demo identities does not retain access to the previous demo citizen's requests. Create a citizen account when you need to return later. Do not enter sensitive information.
 
 ## Run locally
-Requires Node 22+ and PostgreSQL. Copy `.env.example` to `.env` and configure `DATABASE_URL`. Never commit `.env`.
+
+Requires Node 22+ and PostgreSQL. Copy `.env.example` to `.env` and configure `DATABASE_URL`. Never commit secrets.
 
 ```sh
 npm ci
@@ -22,26 +39,28 @@ npm run build
 node --env-file=.env server/index.js
 ```
 
-Open http://localhost:3000. For frontend development, run `npm run dev` alongside the backend.
+Open http://localhost:3000. For frontend development, run `npm run dev` alongside the backend. Development proxy targets port 3000.
 
 ## Deploy on Render
-Create one Node web service with `npm ci && npm run build` as build command and `npm start` as start command. Configure `DATABASE_URL` securely and set `NODE_ENV=production`. Use Oregon for the supplied Oregon database. The server binds to `0.0.0.0` and Render's `PORT`. Readiness endpoint: `/api/health`.
 
-Startup creates only the application-owned `bhoomi` schema and adds missing sample parcels without overwriting existing records. It does not drop or alter unrelated data. Additive startup initialization is protected by a PostgreSQL advisory lock. Database SSL certificate validation stays enabled for remote connections.
+- Node web service, Oregon, free compute.
+- Build: `npm ci --include=dev && npm run build`.
+- Start: `npm start`.
+- Set `DATABASE_URL` securely and `NODE_ENV=production`.
+- The server binds to `0.0.0.0` and Render's `PORT`; readiness endpoint `/api/health`.
+- The database remains externally supplied. Startup creates/migrates only the `bhoomi` schema under an advisory lock. Existing parcel records are not reseeded over user changes.
 
-## Demonstrate
-1. Enter Citizen demo, select `URB-002`, request an area correction and note the tracking ID.
-2. Sign out; enter Officer demo, review the matching request and approve with a reason.
-3. Open the parcel to see the new area and History entry.
-4. Try a second decision on the same request through the API: it returns 409.
-5. Select `URB-001` to show a dispute review and its required acknowledgement.
+See [deployment record](DEPLOYMENT.md) for service details. Public Git URL deployments can require a manual Render deploy after pushing, even when automatic deployment is configured.
 
-Demo citizen access is browser-session based, expires after 24 hours and is replaced when switching demo roles. Create a citizen account to preserve access to requests across sign-ins. Public Officer demo intentionally permits decisions on synthetic requests only. Avoid personal or confidential data.
+## Verify
 
-## Verification
-`npm test` checks fixture integrity and explainable record rules. `npm run build` verifies the frontend bundle. Integration verification covers citizen privacy, registration and login, approvals, rejection, duplicate decisions, dispute routing, stale versions, persistence and database audit changes. See `TECHNICAL.md` for architecture, API details and boundaries.
+```sh
+npm test
+npm run build
+npm audit --omit=dev
+```
 
-Run the API and browser verification against an exclusively controlled demonstration instance (these create disposable test accounts and requests, then remove those rows):
+With the backend running, set `TEST_BASE_URL` to the intended **synthetic demonstration instance** and run:
 
 ```sh
 node --env-file=.env test/integration.mjs
@@ -49,7 +68,19 @@ npx playwright install chromium
 node --env-file=.env test/browser.mjs
 ```
 
-Set `TEST_BASE_URL` to check a deployed instance. API integration checks restore a parcel's original test value; do not run them against a shared production system or during concurrent editing.
+The API suite exercises 79 HTTP checks, using a uniquely imported test parcel and disposable accounts. Browser verification uses a separate test parcel and cleans up its own records. Both require database access to remove only their test fixtures. Do not run these scripts against a system containing real land records. CI runs unit checks and builds the frontend; it does not require database credentials.
 
-## Boundaries
-No real government connectors, document attachments, real ULPIN issuance, payment, SMS, legal title verification, cadastral accuracy or OGC compliance claim. Registration workflows and notifications are simulated; enquiries record a decision rather than issuing an official approval. A public demo officer is not suitable for production. Production requires verified departmental identities, jurisdiction access, authoritative datasets and formal security/privacy review.
+`npm run format` formats the source. `npm run guide` synchronizes the Markdown guide with the built-in guide text.
+
+## Project documentation
+
+- [Operator guide](OPERATOR_GUIDE.md)
+- [Standard Technical Document](TECHNICAL.md)
+- [Requirement coverage](REQUIREMENTS.md)
+- [Deployment record](DEPLOYMENT.md)
+- API specification: `/api/docs`
+- Feature discovery: `/ogc`
+
+## Production boundaries
+
+No authorized government connectors, surveyed cadastral data, actual ULPIN issuance, legal title verification, document-file uploads, payment processing, SMS, satellite change detection or trained predictive model. Evidence references are plain text. Demo approvals and valuation references have no legal effect. A real deployment needs verified departmental identities, official state rules, production backups/recovery and independent security/privacy/accessibility validation.

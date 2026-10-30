@@ -1,5 +1,7 @@
 # Deployment record
 
+Current release: **Bhoomi Land Stack v2**. The release adds department/state permissions, staged registration and planning workflows, 180 synthetic parcels across three states, state-data import/normalization, durable mock integration events, source quality checks, notifications, bookmarks and a built-in printable user guide.
+
 - Application: https://bhoomi-landstack.onrender.com
 - Source: https://github.com/nandhushreem/-bhoomi-landstack-
 - Render service: `srv-dbi751ifngtc73cgbn80`
@@ -16,6 +18,12 @@
 ## Verification on 30 October 2026
 
 Passed: unit checks, production frontend build, dependency audit (no reported production vulnerabilities), PostgreSQL-backed API workflow and live HTTPS browser workflow. API checks cover signup/login, session persistence, citizen privacy, denied unauthorized decisions, approval, rejection, audit history, duplicate-decision protection, dispute routing, stale-version protection and invalid input. Browser checks cover desktop explorer, citizen submission, officer approval, insights, mobile layout and runtime errors.
+
+Version 2 verification: seven unit checks, production build and zero reported production dependency vulnerabilities. The expanded API suite performs 79 HTTP checks on disposable fixtures. Browser verification covers a complete three-department registration request, state filtering, overlays, administrator import preview/commit, sync console, source quality dashboard, mobile layout and built-in guide. It reported no browser runtime errors. The four-page PDF guide was rendered and visually inspected.
+
+Guide: https://bhoomi-landstack.onrender.com/#guide
+
+PDF: https://bhoomi-landstack.onrender.com/bhoomi-user-guide.pdf
 
 ## Operation
 

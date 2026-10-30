@@ -1,61 +1,141 @@
-# Standard Technical Document — SIH26014
+# Standard Technical Document — Bhoomi Land Stack v2
+
+SIH26014 · Updated 30 October 2026 · Functional synthetic-data prototype
 
 ## 1. Architecture
-React/Vite browser client → Express JSON API → PostgreSQL. One Render Node web service serves both compiled static assets and API. Leaflet displays GeoJSON on an OpenStreetMap context layer. Tile attribution remains visible. All parcel overlays are synthetic.
 
-## 2. Data model
-All tables live in the isolated `bhoomi` schema: `users`, `sessions`, `parcels`, `applications`, `audit`. Parcel JSON contains source labels, a demo identifier, jurisdiction, area, use, rights holder, constraints, fiscal status, geometry and record version. User IDs are UUIDs. Application IDs use random references. Sessions persist only SHA-256 token hashes. Database changes use parameters rather than interpolated user input.
+React/Vite browser client → Express JSON API → PostgreSQL. A single Render Node service serves static assets and APIs. Lazy-loaded screens separate parcel exploration, citizen requests, governance insights, data exchange, integration operations and the guide. Leaflet renders GeoJSON over an attributed OpenStreetMap basemap. Backend modules separate authentication/server setup, workflow, domain validation and platform interfaces.
 
-## 3. API standards
-JSON over HTTP, UTF-8, maximum 32 KB request payload. Errors are `{error:string}` and use 400/401/403/404/409/429/500 as appropriate. Endpoint summary: `/api/docs`.
+All application tables use the isolated `bhoomi` schema. No unrelated database objects are changed. Additive startup initialization runs in a transaction with a PostgreSQL advisory lock. Existing parcels are preserved; only missing seed IDs are inserted.
 
-| Method | Endpoint | Access |
-|---|---|---|
-| GET | /api/health | Public readiness, database SELECT 1 |
-| GET | /api/auth/me | Current session |
-| POST | /api/auth/register | Public, citizen accounts only |
-| POST | /api/auth/login | Public |
-| POST | /api/auth/demo | Public, explicit synthetic-data demo |
-| POST | /api/auth/logout | Current session |
-| GET | /api/parcels | Public synthetic records |
-| GET | /api/parcels/:id/history | Public synthetic audit history, no application descriptions |
-| GET | /api/applications | Citizen's own requests or officer queue |
-| POST | /api/applications | Citizen |
-| POST | /api/applications/:id/decision | Officer |
-| GET | /api/analytics | Aggregate demo statistics |
+## 2. Data schemas
 
-Application body: `{parcel_id,service,details,requested_area?}`. Supported services: Area correction, Ownership record enquiry, Building permission enquiry. Decision body: `{decision:'Approved'|'Rejected',reason,dispute_reviewed?}`.
+| Table              | Purpose and integrity                                                                                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| users              | UUID, name, unique email, scrypt password hash, citizen/officer role, department, jurisdiction, demo flag                                                        |
+| sessions           | SHA-256 hash of random session token, user reference, 24-hour expiry                                                                                             |
+| parcels            | Unique internal parcel ID and JSONB record: state, survey, demo identifier, rights holder, area, use, constraints, fiscal values, geometry, version, source date |
+| source_records     | Independent rights, registration, planning and fiscal values with department/source/update metadata                                                              |
+| applications       | Citizen, parcel, service, requested values, payload, status, current department, parcel version and demo due date                                                |
+| tasks              | Ordered departmental stages; unique application/stage; state, decision reason, actor and completion time                                                         |
+| audit              | Parcel/application, actor, action, before/after values, reason, timestamp                                                                                        |
+| notifications      | Citizen-specific request update, read status and timestamp                                                                                                       |
+| integration_events | Unique application/stage event key, parcel/department/payload, delivery state, attempts and last error                                                           |
+| import_batches     | Source, state adapter, record count, actor and commit date                                                                                                       |
+| bookmarks          | Unique user/parcel pair                                                                                                                                          |
 
-## 4. Interoperability
-Internal parcel ID joins datasets. Official ULPIN would be an external identifier in a real adapter; `DEMO-*` is not ULPIN. Source formats are represented as synthetic linked records; no live departmental integration is claimed. Submitted requests create an audit event with simulated departmental checks. Approvals record a simulated fiscal notification. Future adapters need schema mapping, unit and CRS conversion, idempotent events, retries, source provenance and reconciliation.
+Foreign keys prevent orphaned workflow data. Indexes cover users' applications, task application references, notification owners, parcel source records and state expressions. The prototype stores geometry as GeoJSON JSONB; a production rollout should use PostGIS geometry columns and spatial indexes.
 
-## 5. GIS standards
-GeoJSON Polygon coordinates are WGS84 longitude,latitude. Rings are closed. The displayed sample area is a fixture attribute, not a surveyed area derived from synthetic geometry. No OGC API – Features certification or conformance is claimed. Production should preserve authoritative CRS metadata, validate topology, calculate area in suitable projected CRS and provide an OGC-compatible feature endpoint. Parcel split/merge lineage is future work.
+## 3. Roles and authorization
 
-## 6. Workflow and integrity
-Disputed parcels enter Under review; other applications enter Submitted. An officer approves or rejects with a reason. Approval on disputed parcels requires explicit acknowledgement. A transaction locks the application then parcel; already-final decisions return 409. Approved requests reject a stale parcel version. Area corrections update area/version/date, then decision and audit are committed together. Enquiry approval is only a recorded answer, not a title or planning certificate.
+Registered users can create citizen accounts only. Demo officers select Revenue, Registration, Planning, Tax & valuation or Platform administrator. Ordinary officers can decide only the currently assigned department's task, within their state jurisdiction. The administrator can review all departments and import/process synthetic data. Public demo access is intentional and unsuitable for a real government system.
 
-## 7. Security
-Passwords use scrypt with per-user random salt. Sessions use 256-bit random tokens, server-side hashes, 24-hour expiry and HttpOnly/SameSite=Lax cookies, Secure in production. Roles come from database records, never request roles except the deliberately public demo mode. API rate limits, origin checks, Helmet content policy, body limits, parameterized queries and server-side validation are enabled. Citizen applications are private to their account; demo officers have global synthetic queue access. Audit API omits application descriptions and private email. Audit rows are append-only through application routes; database administrators retain normal authority. No secrets are committed. Do not store sensitive information in this demo.
+Citizen application, notification and bookmark queries filter by the authenticated database user. Role/state decisions are enforced on the server, independent of UI controls. A legacy officer without department metadata defaults to Revenue for backward compatibility.
 
-## 8. UI/UX and colours
-Forest green #123C31 navigation, #164D3B primary actions, warm neutral #F6F7F3 background and #D6B36E accents. Zoning layers use distinct green, ochre, blue and violet fills. Status labels include text, not colour alone. Responsive desktop/mobile layout, labelled form fields, visible focus, modal focus trapping, Escape close, loading/error/empty states and reduced-motion support. Keyboard parcel selection is provided by directory buttons; the map is supplemented by a table. Formal WCAG conformance is not claimed.
+## 4. API and interoperability standards
 
-## 9. Deployment and scaling
-Node >=22, PostgreSQL pool limit 5; TLS validation enabled remotely. Build `npm ci && npm run build`; start `npm start`; readiness `/api/health`. Runtime secrets belong in Render environment variables. Startup initialization is additive under a transaction/advisory lock. Graceful SIGTERM closes HTTP and database connections. For scaling: spatial PostGIS storage/indexes, viewport pagination/vector tiles, background adapters, managed migrations, session cleanup, source freshness monitoring, backups and recovery testing. The current prototype loads 60 parcels and caps application listing at 300.
+JSON over HTTP, UTF-8, 1 MB payload limit. The UI limits uploaded JSON files to 900 KB and imports to 200 records. Errors use `{error:string}`; validation can also return `errors`. Relevant responses: 400 invalid data, 401 missing session, 403 unauthorized department/state, 404 missing record, 409 duplicate/final/stale conflict, 429 throttling and 500 transient server error. Rate-limit responses are JSON.
 
-## 10. Requirement traceability
-| Requirement | Demonstration | Limitation |
-|---|---|---|
-| Parcel visualization | Explorer and searchable directory | Synthetic boundaries |
-| Multiple domains | Parcel Records and Overview tabs | Sample linked datasets |
-| Citizen service | Requests and tracking | No official submission |
-| Department workflow | Officer queue and atomic area correction | Other departments simulated |
-| Security and audit | Session permissions, versions, History | Public demo officer intentional |
-| Governance analytics | Insights, zone counts, indicators | Rules, not ML |
-| Rural/urban | Two pilot contexts | One state fixture |
-| Interoperability | JSON API, common ID, metadata | No live adapters/OGC compliance |
-| Standard Technical Document | This document | Production standards require validation |
+The OpenAPI 3.1 document at `/api/docs` lists paths, request properties, path/query parameters, cookie authentication and response statuses. It is an interface contract, not a claim that every response has a detailed generated domain schema.
 
-## 11. Evaluation
-Verify signup/login, isolation between citizens, denied citizen decisions, complete approval, rejection, duplicate requests/decisions, disputed review, stale concurrent requests, persistence across sessions, history and database readiness. Unit checks cover data integrity and rule outputs. CI builds the frontend and runs unit checks on every push.
+Key routes:
+
+| Group         | Routes                                                                        |
+| ------------- | ----------------------------------------------------------------------------- |
+| Identity      | auth/me, auth/register, auth/login, auth/demo, auth/logout                    |
+| Parcels       | parcels, parcels/:id/records, parcels/:id/spatial, parcels/:id/history        |
+| Services      | applications, applications/:id/decision, applications/:id/withdraw            |
+| Citizen tools | notifications, notifications/read, bookmarks, bookmarks/:id                   |
+| Governance    | analytics, quality, layers, configuration                                     |
+| Exchange      | exchange/template/:state, exchange/preview, exchange/import, exchange/batches |
+| Integration   | integrations, integrations/process                                            |
+| Operations    | health, docs                                                                  |
+
+These routes are under `/api`. Experimental feature routes are under `/ogc`.
+
+## 5. State adapters and units
+
+| Profile        | ID / survey / holder fields             | Source area | Conversion to m² |
+| -------------- | --------------------------------------- | ----------- | ---------------- |
+| Karnataka      | parcel_id / survey_number / holder_name | extent_sq_m | × 1              |
+| Tamil Nadu     | parcel_ref / survey_no / pattadar       | extent_ha   | × 10,000         |
+| Andhra Pradesh | land_ref / survey_ref / occupant        | extent_acre | × 4,046.8564224  |
+
+Profiles expose language metadata and configurable terminology. They are synthetic demonstration mappings, not official government API schemas. UTF-8 names and source values are retained. Preview normalizes a copy without modifying the source payload.
+
+Validation checks supported state, source-name length, 1–200 rows, unique uppercase DEMO identifiers, required rights-holder/survey/locality fields, positive bounded areas, land use, Urban/Rural context and a structurally valid, closed, single-ring GeoJSON Polygon. Full cadastral topology, self-intersection and survey-accuracy validation are production work. Duplicate existing IDs block an import. A database transaction commits parcels, source records, batch metadata and audit together; a concurrent uniqueness conflict rolls the batch back.
+
+## 6. GIS exchange and spatial layers
+
+GeoJSON uses WGS84 longitude/latitude, with closed polygon rings. No official ULPIN is issued; DEMO identifiers are explicitly synthetic. Seeded cadastral overlays are illustrative and are not aligned to surveyed property boundaries.
+
+Synthetic environmental review polygons and utility corridor lines are available through `/api/layers`. Turf geometric intersection tests report overlays that intersect or touch a parcel. Geometry area is an illustrative geodesic calculation and is displayed separately from recorded area. Valuation is recorded area multiplied by a synthetic per-square-metre rate; it is not a market appraisal.
+
+Experimental OGC-style routes provide discovery, collection metadata, individual features, limit/offset pagination, state filtering and bounding-box envelope filtering. Default limit 50; maximum 200. `/ogc/conformance` deliberately advertises no conformance classes because formal OGC testing/certification has not been completed. Production should use appropriate projected CRS for area, authoritative topology and standards validation.
+
+## 7. Workflow state machines
+
+Applications begin Submitted or Under review when a synthetic dispute flag is active. Each service creates ordered tasks; the first is Pending and later stages Waiting.
+
+| Service                     | Department route                | Implemented effect                                                                        |
+| --------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------- |
+| Area correction             | Revenue                         | Update area/version on approval                                                           |
+| Ownership enquiry           | Revenue                         | Record an answer                                                                          |
+| Building permission enquiry | Planning                        | Record an answer                                                                          |
+| Registration & mutation     | Registration → Revenue → Fiscal | Record registration review; mutate rights holder at Revenue; final fiscal acknowledgement |
+| Building permission         | Planning → Fiscal               | Record demo planning approval, then fiscal acknowledgement                                |
+| Dispute report              | Revenue                         | Set synthetic dispute flag                                                                |
+| Dispute resolution          | Revenue                         | Clear synthetic dispute flag after acknowledged review                                    |
+| Tax assessment review       | Fiscal                          | Record assessment review; no automatic waiver/payment                                     |
+
+Approval completes the current stage and activates the next. Intermediate status is In progress; final stage becomes Approved. Rejection finalizes the request and cancels future stages. A citizen can withdraw only before any stage approval. Target dates are configurable demonstration service targets, not statutory commitments.
+
+## 8. Transaction and concurrency controls
+
+A decision transaction locks the application and parcel, checks department/state, verifies a pending task and compares the captured parcel version. Final decisions and stale approvals return 409. Disputed parcels require explicit acknowledgement. Planning approval requires restriction review; conservation designation blocks demo building approval.
+
+Record changes, task outcome, next assignment, audit, delivery event and citizen notification commit together. Registration review alone never changes the rights-holder record. Mutation increments the parcel version and updates the application's captured version before the fiscal stage. A rapid identical citizen resubmission is rejected to reduce accidental duplicates. This is not a global idempotency key for arbitrary client retries.
+
+## 9. Mock departmental integration
+
+Every approved review stage creates a unique persistent delivery event. Administrators can process up to 10 pending/failed events, process a single event or simulate an unavailable adapter. Failed events retain payload, attempt count and error and can be retried. Delivered events are excluded from replay.
+
+Delivery updates the corresponding independent local department source record in a transaction. Event parcel versions prevent older deliveries from replacing newer delivered source values. `FOR UPDATE SKIP LOCKED` avoids duplicate concurrent event processing. Department outages do not undo committed decisions. No external government API is called; processing is explicitly triggered through the operations interface rather than an always-running worker.
+
+## 10. Record quality and governance analytics
+
+Rules compare source areas and rights holders with current parcel records, identify missing rights sources and expose dispute, tax, mortgage and conservation indicators. Every finding states the rule and conflicting values/context. No automatic conflict resolution or fraud/legal verdict is produced. Source synchronization can resolve differences after approved decisions; independent historical inconsistencies remain visible.
+
+Insights include state-filtered parcel/use/fiscal/quality counts, explicitly all-state application outcome counts and downloadable findings. No trained ML, predictive accuracy or satellite change-detection claim is made.
+
+## 11. Security framework
+
+Passwords use scrypt with random per-user salts. Session cookies contain 256-bit random tokens; only token hashes persist in PostgreSQL. Cookies are HttpOnly, SameSite=Lax, and Secure in production, with a 24-hour expiry. SQL uses parameters. Payload and string lengths are bounded, origins are checked for mutations, and Helmet sets security headers/CSP.
+
+Global API limits and mutation-specific sign-in limits are separate; normal session reads do not consume the sign-in quota. Sensitive credentials live only in ignored local environment files and Render environment settings. Remote database TLS certificate validation stays enabled. API error logs avoid request bodies and secrets.
+
+Synthetic parcel/source/history information is public. Private citizen request descriptions, email addresses and sessions are not included in public parcel endpoints. Decision reasons are visible in synthetic parcel audit history; do not enter personal/confidential information. Audit routes are append-only through the application, but database administrators retain normal authority. Formal penetration testing, regulatory compliance and legal assurance are not claimed.
+
+## 12. UI/UX and colour system
+
+Forest #123C31 sidebar, #164D3B actions, neutral #F6F7F3 canvas and #D6B36E accents. Zoning colours have accompanying labels. Status and quality severity are expressed in text as well as colour. Desktop map/detail layouts stack on mobile. Tables support horizontal scrolling within their container.
+
+Forms have labels and validation; controls have visible focus; dialogs trap focus and close with Escape; notifications announce status; loading/error/empty states are provided; reduced-motion preference is respected. The keyboard-accessible parcel directory supplements the map. The built-in guide has a printable layout and a simple Telugu quick-start sentence. Formal WCAG conformance is not claimed.
+
+## 13. Deployment and scaling
+
+Node 22+, Express, React/Vite, PostgreSQL pool maximum five connections. One free Render web service in Oregon uses an externally supplied database URL. Runtime startup binds `0.0.0.0` and platform PORT. `/api/health` checks database readiness and reports version 2. SIGTERM closes HTTP and the connection pool.
+
+No extra paid resource is required by this enhancement. The free service can sleep when idle. The database retains its own provider lifecycle/expiry and external access configuration. Data migrations are additive and remain compatible with the previous release's basic records.
+
+Production scaling requires PostGIS indexing, viewport queries/vector tiles, cursor pagination, migration tooling, scheduled session cleanup, a background delivery worker, authorized adapters, source freshness monitoring, observability, capacity testing and disaster-recovery exercises. Current application lists cap at 300 and integration lists at 100; this is a prototype capacity limit, not nationwide scalability evidence.
+
+## 14. Verification
+
+Unit checks cover three-state fixture uniqueness, closed rings, state-unit normalization, malformed/duplicate input, department/jurisdiction authorization, workflow separation and explainable rule outputs. PostgreSQL-backed API verification performs 79 HTTP checks on a uniquely imported disposable parcel. It covers registration/login persistence, privacy, multi-stage mutation, planning acknowledgement, disputes, stale versions, withdrawal, notifications, bookmarks, fail/retry/idempotency and GeoJSON pagination.
+
+Browser verification covers desktop/mobile, state filters, overlays, citizen registration request, three departmental approvals, administrator import validation/commit, integration console, quality insights and guide navigation. The tests use separate synthetic fixtures and remove only their own rows. CI executes unit checks and a production build without secrets. Dependency audit results are recorded at release time rather than treated as a permanent security guarantee.
+
+## 15. Production handoff
+
+Replace public demo roles with verified identities and least-privilege jurisdiction assignments. Obtain authorized land/source records and connectivity agreements. Confirm each state's actual mutation/planning/dispute rules and required evidence. Add verified document storage, retention policy, recovery/backups, monitoring and formal security/accessibility evaluation. Preserve legal decision authority with responsible government officers. See REQUIREMENTS.md for the prototype's requirement coverage and explicit remaining boundaries.
