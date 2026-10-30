@@ -2,6 +2,8 @@
 
 A functioning SIH26014 demonstration of parcel-centric land governance. Synthetic data only; no government affiliation or title certification.
 
+Live application: https://bhoomi-landstack.onrender.com
+
 ## Features
 - 60 clickable GeoJSON parcels across an urban ward and rural village; parcel ID, survey and rights-holder search; zoning and risk layers.
 - Linked sample rights, registration, encumbrance, building-permission and fiscal records with source metadata.
@@ -38,6 +40,16 @@ Demo citizen access is browser-session based, expires after 24 hours and is repl
 
 ## Verification
 `npm test` checks fixture integrity and explainable record rules. `npm run build` verifies the frontend bundle. Integration verification covers citizen privacy, registration and login, approvals, rejection, duplicate decisions, dispute routing, stale versions, persistence and database audit changes. See `TECHNICAL.md` for architecture, API details and boundaries.
+
+Run the API and browser verification against an exclusively controlled demonstration instance (these create disposable test accounts and requests, then remove those rows):
+
+```sh
+node --env-file=.env test/integration.mjs
+npx playwright install chromium
+node --env-file=.env test/browser.mjs
+```
+
+Set `TEST_BASE_URL` to check a deployed instance. API integration checks restore a parcel's original test value; do not run them against a shared production system or during concurrent editing.
 
 ## Boundaries
 No real government connectors, document attachments, real ULPIN issuance, payment, SMS, legal title verification, cadastral accuracy or OGC compliance claim. Registration workflows and notifications are simulated; enquiries record a decision rather than issuing an official approval. A public demo officer is not suitable for production. Production requires verified departmental identities, jurisdiction access, authoritative datasets and formal security/privacy review.

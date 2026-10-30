@@ -16,7 +16,7 @@ export async function initialize(){
  CREATE TABLE IF NOT EXISTS bhoomi.applications(id TEXT PRIMARY KEY,parcel_id TEXT REFERENCES bhoomi.parcels(id),user_id UUID REFERENCES bhoomi.users(id),service TEXT NOT NULL,requested_area NUMERIC,details TEXT NOT NULL,status TEXT NOT NULL,reason TEXT,parcel_version INTEGER NOT NULL,created_at TIMESTAMPTZ DEFAULT now(),updated_at TIMESTAMPTZ DEFAULT now());
  CREATE INDEX IF NOT EXISTS applications_user_idx ON bhoomi.applications(user_id);
  CREATE TABLE IF NOT EXISTS bhoomi.audit(id BIGSERIAL PRIMARY KEY,application_id TEXT REFERENCES bhoomi.applications(id),parcel_id TEXT NOT NULL,actor TEXT NOT NULL,action TEXT NOT NULL,detail JSONB NOT NULL,created_at TIMESTAMPTZ DEFAULT now());`);
- for(const p of sampleParcels())await c.query('INSERT INTO bhoomi.parcels(id,data) VALUES($1,$2) ON CONFLICT DO NOTHING',[p.id,p]);
+ await c.query('INSERT INTO bhoomi.parcels(id,data) SELECT id,data FROM jsonb_to_recordset($1::jsonb) AS p(id text,data jsonb) ON CONFLICT DO NOTHING',[JSON.stringify(sampleParcels().map(p=>({id:p.id,data:p})))]);
  await c.query('COMMIT');
  }catch(e){await c.query('ROLLBACK');throw e}finally{c.release()}
 }
