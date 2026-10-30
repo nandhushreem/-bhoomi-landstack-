@@ -15,6 +15,7 @@ import { recordChecks } from "./seed.js";
 import { specification } from "./openapi.js";
 import { workflow } from "./workflow.js";
 import { platform, geo } from "./platform.js";
+import { assistant } from "./assistant.js";
 import { departments, profiles } from "./domain.js";
 const app = express();
 app.set("trust proxy", 1);
@@ -137,7 +138,7 @@ app.get("/api/health", async (req, res) => {
     status: "ok",
     project: "SIH26014",
     data: "synthetic demonstration",
-    version: "2.0.0",
+    version: "2.1.0",
   });
 });
 app.get("/api/auth/me", (req, res) =>
@@ -270,6 +271,7 @@ app.get("/api/analytics", async (req, res) => {
     applications: counts.rows,
   });
 });
+app.use("/api", assistant);
 app.use("/api", workflow);
 app.use("/api", platform);
 app.use("/ogc", geo);

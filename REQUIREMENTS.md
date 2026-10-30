@@ -21,4 +21,4 @@ Source: [full reproduced brief](https://sih-explorer.amanuniyal47.workers.dev/pr
 | Technical documentation        | TECHNICAL.md, OpenAPI and deployment record                               | Production standards need independent validation                     |
 | Operation guide                | Built-in guide, printable PDF and OPERATOR_GUIDE.md                       | Covers this released demonstration                                   |
 
-AI/ML, satellite change detection and predictive analytics are encouraged enhancements in the brief, not implemented claims. The delivered differentiator is explainable cross-source reconciliation and demonstrable recovery from departmental delivery failures.
+Custom predictive analytics and satellite change detection remain outside this prototype. Version 2.1 adds an optional read-only OpenRouter assistant for explaining actual sample parcel records and application workflows in English/Telugu. Source reconciliation and department recovery remain deterministic, explainable features, independent of AI availability.

@@ -1,7 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { guideSections } from "../src/guide-content.js";
 const header =
-  "# Bhoomi Land Stack — User Guide\n\nVersion 2 · SIH26014 · 30 October 2026\n\nLive app: https://bhoomi-landstack.onrender.com\n\nOnline guide: https://bhoomi-landstack.onrender.com/#guide\n\nSynthetic demonstration only. No government affiliation, legal title verification or actual government transactions. Avoid sensitive information.\n\n";
+  "# Bhoomi Land Stack — User Guide\n\nVersion 2.1 · SIH26014 · 30 October 2026\n\nLive app: https://bhoomi-landstack.onrender.com\n\nOnline guide: https://bhoomi-landstack.onrender.com/#guide\n\nSynthetic demonstration only. No government affiliation, legal title verification or actual government transactions. Avoid sensitive information.\n\n";
 const text =
   header +
   guideSections

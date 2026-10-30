@@ -136,6 +136,18 @@ Unit checks cover three-state fixture uniqueness, closed rings, state-unit norma
 
 Browser verification covers desktop/mobile, state filters, overlays, citizen registration request, three departmental approvals, administrator import validation/commit, integration console, quality insights and guide navigation. The tests use separate synthetic fixtures and remove only their own rows. CI executes unit checks and a production build without secrets. Dependency audit results are recorded at release time rather than treated as a permanent security guarantee.
 
-## 15. Production handoff
+## 15. Optional OpenRouter AI assistant (v2.1)
+
+The sidebar AI screen sends questions to `/api/ai/chat`. The server validates input/history, requires a session, retrieves only public synthetic parcel/source information and selected operation-guide excerpts, and calls OpenRouter through the installed AI SDK's OpenAI-compatible provider. The default model is `openrouter/free`, verified against the provider model catalogue at implementation time. No tool execution or record-changing capability is exposed to the model.
+
+`OPENROUTER_API_KEY` is server-only; `OPENROUTER_MODEL` is optional. No provider credential is sent to the browser, put in a prompt or returned by diagnostics. `/api/ai/status` reports key presence; `/api/ai/check` lets a demo administrator validate provider authentication, without returning account/key details. Key presence and valid authentication do not guarantee model availability or credits.
+
+Questions are limited to 1,600 characters, history to eight bounded user/assistant messages (at most six forwarded), output to 1,100 tokens and provider generation to 45 seconds with no automatic retries. Chat/check share a per-IP limit of eight calls per minute. The UI can stop requests and renders model text safely without HTML interpretation. It offers English/Telugu and independently supplied source buttons. Conversations stay in page memory; the app does not persist chat transcripts.
+
+Provider authentication, budget, permission, rate, model and timeout errors map to non-sensitive user-facing diagnostics. Unavailable AI returns an explicitly labelled deterministic Local guide response, not a fabricated successful AI answer. The UI tells users that messages and selected synthetic records go to OpenRouter. Real confidential land data must not be used without a separate data-processing/security review. AI explanations never establish title, permissible construction, legal advice or a government decision.
+
+Verification includes a mocked OpenRouter response exercising the actual installed SDK request/response contract, input-role validation, credential isolation and provider error mapping. Live provider generation must be separately verified after the actual deployment key is available; local/mock success is not provider-connectivity evidence.
+
+## 16. Production handoff
 
 Replace public demo roles with verified identities and least-privilege jurisdiction assignments. Obtain authorized land/source records and connectivity agreements. Confirm each state's actual mutation/planning/dispute rules and required evidence. Add verified document storage, retention policy, recovery/backups, monitoring and formal security/accessibility evaluation. Preserve legal decision authority with responsible government officers. See REQUIREMENTS.md for the prototype's requirement coverage and explicit remaining boundaries.

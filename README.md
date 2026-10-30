@@ -6,6 +6,8 @@ Version 2 is a functional SIH26014 prototype connecting parcel records, citizen 
 
 ## What you can demonstrate
 
+- Bhoomi AI: a read-only OpenRouter assistant using current sample parcel records and the operation guide, with English/Telugu answers, source links, server-side key handling and explicit local-guide fallback on provider errors. Open `/#assistant` in the live app.
+
 - 180 seeded parcels across urban/rural pilots in Karnataka, Tamil Nadu and Andhra Pradesh. Existing pilot records are preserved; imports add to this count.
 - Searchable maps, land-use/risk layers, restriction and utility overlays, bookmarks, linked records, history, spatial intersection checks and GeoJSON/summary exports.
 - Citizen signup/login, eight land services, tracking receipts, notifications and withdrawal before first review.
@@ -42,6 +44,8 @@ node --env-file=.env server/index.js
 Open http://localhost:3000. For frontend development, run `npm run dev` alongside the backend. Development proxy targets port 3000.
 
 ## Deploy on Render
+
+For AI, add `OPENROUTER_API_KEY` securely in this service's Render Environment, then save and deploy. Never use a `VITE_` key or commit the secret. `OPENROUTER_MODEL` defaults to `openrouter/free`; optional paid models use your provider account limits. `/api/ai/status` exposes configuration status only. In Platform administrator demo, the AI page's Test server key checks provider authentication without generating tokens. Chat requires a session and is rate-limited.
 
 - Node web service, Oregon, free compute.
 - Build: `npm ci --include=dev && npm run build`.

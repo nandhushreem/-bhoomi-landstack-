@@ -21,6 +21,7 @@ import {
   Bell,
   ShieldCheck,
   MapPin,
+  Sparkles,
 } from "lucide-react";
 import { api, post, date } from "./api";
 import { Modal } from "./ui";
@@ -34,6 +35,7 @@ const Integrations = lazy(() =>
   import("./Operations").then((m) => ({ default: m.Integrations })),
 );
 const Guide = lazy(() => import("./Guide"));
+const Assistant = lazy(() => import("./Assistant"));
 const pages = {
   explore: {
     name: "Parcel explorer",
@@ -55,6 +57,13 @@ const pages = {
     sub: "Compare source records and inspect governance outcomes.",
     eyebrow: "FROM RECORDS TO BETTER DECISIONS.",
     icon: LayoutDashboard,
+  },
+  assistant: {
+    name: "Bhoomi AI",
+    title: "Land records, explained.",
+    sub: "Ask about a parcel or service in English or Telugu.",
+    eyebrow: "AI HELP. REAL APPLICATION CONTEXT.",
+    icon: Sparkles,
   },
   exchange: {
     name: "Data exchange",
@@ -166,7 +175,13 @@ export default function App() {
       await post("/auth/demo", { role, department, jurisdiction });
       await reload();
       setAuth(false);
-      navigate(role === "officer" ? "applications" : "explore");
+      navigate(
+        view === "assistant"
+          ? "assistant"
+          : role === "officer"
+            ? "applications"
+            : "explore",
+      );
       return `You’re in ${role} demo mode. All data is synthetic.`;
     });
   }
@@ -194,7 +209,7 @@ export default function App() {
           </span>
         </a>
         <div className="workspace-label">
-          WORKSPACE <span className="version-chip">2.0</span>
+          WORKSPACE <span className="version-chip">2.1</span>
         </div>
         <nav>
           {Object.entries(pages).map(([key, p]) => {
@@ -454,6 +469,16 @@ export default function App() {
                     openAuth={() => setAuth(true)}
                   />
                 )}
+                {view === "assistant" && (
+                  <Assistant
+                    data={data}
+                    user={user}
+                    run={run}
+                    openAuth={() => setAuth(true)}
+                    navigate={navigate}
+                    openParcel={openParcel}
+                  />
+                )}
                 {view === "integrations" && (
                   <Integrations
                     user={user}
@@ -470,7 +495,7 @@ export default function App() {
           <footer className="page-footer">
             <span>
               <Layers size={14} />
-              Bhoomi Land Stack · v2
+              Bhoomi Land Stack · v2.1
             </span>
             <span>
               SIH26014 · Synthetic demonstration · No official affiliation
@@ -492,7 +517,7 @@ export default function App() {
               await post("/auth/" + mode, body);
               await reload();
               setAuth(false);
-              navigate("applications");
+              navigate(view === "assistant" ? "assistant" : "applications");
               return "Your citizen workspace is ready.";
             })
           }
@@ -655,7 +680,7 @@ function About({ navigate }) {
   return (
     <>
       <div className="about-hero">
-        <span className="eyebrow">BHOOMI / SIH26014 / VERSION 2</span>
+        <span className="eyebrow">BHOOMI / SIH26014 / VERSION 2.1</span>
         <h2>
           One spatial foundation.
           <br />A connected governance journey.
@@ -740,9 +765,10 @@ function About({ navigate }) {
             geometry area and sample valuation remain distinct.
           </p>
           <p>
-            <strong>Data quality:</strong> deterministic source comparisons. No
-            trained AI, fraud verdict, satellite change detection or predictive
-            accuracy claim.
+            <strong>Data quality:</strong> deterministic source comparisons.
+            Optional OpenRouter AI explains records and workflows; no custom
+            predictive model, fraud verdict or satellite change detection is
+            claimed.
           </p>
           <p>
             <strong>Security:</strong> hashed passwords and sessions, production

@@ -26,7 +26,7 @@ const admin = (req, res, next) =>
         .json({ error: "Platform administrator demo access is required" });
 platform.get("/configuration", (req, res) =>
   res.json({
-    version: "2.0.0",
+    version: "2.1.0",
     profiles,
     departments,
     services,

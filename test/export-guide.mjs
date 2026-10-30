@@ -10,7 +10,7 @@ try {
     reducedMotion: "reduce",
   });
   await page.goto(
-    (process.env.TEST_BASE_URL || "http://127.0.0.1:3002") + "/#guide",
+    (process.env.TEST_BASE_URL || "http://127.0.0.1:3000") + "/#guide",
   );
   await page
     .getByRole("heading", { name: "Know the boundaries", exact: true })
@@ -25,7 +25,7 @@ try {
     headerTemplate:
       '<div style="font-family:Arial;font-size:8px;color:#7c8a71;margin-left:60px">BHOOMI LAND STACK · USER GUIDE</div>',
     footerTemplate:
-      '<div style="font-family:Arial;font-size:8px;color:#7c8a71;margin:0 60px;width:100%;display:flex;justify-content:space-between"><span>Synthetic SIH26014 demonstration · Version 2</span><span>Page <span class="pageNumber"></span> / <span class="totalPages"></span></span></div>',
+      '<div style="font-family:Arial;font-size:8px;color:#7c8a71;margin:0 60px;width:100%;display:flex;justify-content:space-between"><span>Synthetic SIH26014 demonstration · Version 2.1</span><span>Page <span class="pageNumber"></span> / <span class="totalPages"></span></span></div>',
   });
   console.log("Guide PDF exported.");
 } finally {

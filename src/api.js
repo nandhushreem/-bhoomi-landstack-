@@ -5,7 +5,16 @@ export async function api(url, options = {}) {
     headers: { "Content-Type": "application/json", ...options.headers },
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
-  const data = await response.json();
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(
+      response.status === 429
+        ? "Too many requests. Wait a minute and try again."
+        : "The service returned an unexpected response. Please refresh and try again.",
+    );
+  }
   if (!response.ok) {
     const e = new Error(data.error || "Request failed");
     e.details = data.errors;

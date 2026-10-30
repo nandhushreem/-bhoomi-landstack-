@@ -56,7 +56,7 @@ const decision = (c, id, extra = {}, status = 200) =>
     status,
   );
 try {
-  assert.equal((await anon("/health")).version, "2.0.0");
+  assert.equal((await anon("/health")).version, "2.1.0");
   assert.equal(Object.keys((await anon("/configuration")).profiles).length, 3);
   assert.ok((await anon("/parcels")).parcels.length >= 180);
   await anon("/applications", undefined, 401);

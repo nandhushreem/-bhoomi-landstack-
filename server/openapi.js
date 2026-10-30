@@ -308,3 +308,41 @@ specification.paths["/ogc/collections/parcels/items/{id}"] = {
     parameters: [idParameter],
   },
 };
+specification.info.version = "2.1.0";
+specification.paths["/api/ai/status"] = {
+  get: response("Read-only AI configuration status; no secrets are returned"),
+};
+specification.paths["/api/ai/check"] = {
+  post: response(
+    "Administrator validates server OpenRouter key without generating tokens",
+    true,
+  ),
+};
+specification.paths["/api/ai/chat"] = {
+  post: {
+    ...response(
+      "Read-only contextual AI answer or explicitly labelled local guide fallback",
+      true,
+    ),
+    requestBody: body(
+      {
+        message: { type: "string", minLength: 1, maxLength: 1600 },
+        language: { type: "string", enum: ["en", "te"] },
+        parcel_id: { type: "string", maxLength: 70 },
+        history: {
+          type: "array",
+          maxItems: 8,
+          items: {
+            type: "object",
+            properties: {
+              role: { type: "string", enum: ["user", "assistant"] },
+              content: { type: "string", maxLength: 2000 },
+            },
+            required: ["role", "content"],
+          },
+        },
+      },
+      ["message"],
+    ),
+  },
+};

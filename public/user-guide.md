@@ -1,6 +1,6 @@
 # Bhoomi Land Stack — User Guide
 
-Version 2 · SIH26014 · 30 October 2026
+Version 2.1 · SIH26014 · 30 October 2026
 
 Live app: https://bhoomi-landstack.onrender.com
 
@@ -8,7 +8,17 @@ Online guide: https://bhoomi-landstack.onrender.com/#guide
 
 Synthetic demonstration only. No government affiliation, legal title verification or actual government transactions. Avoid sensitive information.
 
-## 1. Choose your workspace
+## 1. Ask Bhoomi AI
+
+Open Bhoomi AI in the sidebar. Enter a citizen or officer workspace, choose an optional parcel context and select English or Telugu. Type a question and select Send. Source buttons open the relevant parcel or user guide.
+
+AI uses OpenRouter through the server. Your question and selected synthetic source records are sent to the provider. Never include confidential information. The assistant explains records and steps; it cannot submit, approve or change anything.
+
+If AI is unavailable, the app clearly labels its response as Local guide and shows the connection problem. It does not pretend the local response came from an AI model.
+
+For setup, add OPENROUTER_API_KEY in the bhoomi-landstack Render service’s Environment, then save and deploy. An optional OPENROUTER_MODEL selects another valid text model; the default openrouter/free uses the free router. Platform administrator can select Test server key. Invalid-key, credit, permission, rate-limit, model and timeout errors have specific recovery steps.
+
+## 2. Choose your workspace
 
 Select Enter workspace. Citizen demo is a quick visit. Create a citizen account if you want to return to the same requests after signing out; use a test email and a password of at least 10 characters.
 
@@ -16,7 +26,7 @@ For officer access, choose a department and state jurisdiction, then select Offi
 
 Select Switch workspace to change demo roles. Keep the citizen in a normal browser window and officers in a separate private/incognito window. Tabs in one browser profile share the same login.
 
-## 2. Explore a parcel
+## 3. Explore a parcel
 
 Open Parcel explorer. Choose Karnataka, Tamil Nadu or Andhra Pradesh and Urban or Rural. Search a parcel ID, survey number or sample rights holder. Start with URB-002.
 
@@ -24,7 +34,7 @@ Click the polygon or directory entry. Overview shows area, rights holder, tax, p
 
 Turn on Restriction zones and Utility corridors above the map. Save a parcel with the bookmark icon. Use Export GeoJSON or Download parcel summary when you need a copy. Geometry area and recorded area are separate; neither establishes surveyed boundaries.
 
-## 3. Submit and track a request
+## 4. Submit and track a request
 
 Sign in as a citizen, open a parcel and select Request a service. Choose the service and review its department route. Fill the requested area, new sample rights holder or proposed use when relevant.
 
@@ -34,7 +44,7 @@ My applications shows each stage, department decision and demonstration target d
 
 Citizen demo sessions last 24 hours. Switching demo roles creates a different identity. Use a registered citizen account if you need to return to your previous requests.
 
-## 4. Review as an officer
+## 5. Review as an officer
 
 Choose the assigned department and matching state. Open Service queue, find the tracking reference and select Review application. Compare the request with the current parcel. Choose Approved or Rejected and enter a reason of at least 10 characters.
 
@@ -46,7 +56,7 @@ Building permission follows Planning → Tax. Planning must acknowledge zoning a
 
 Any approval on a disputed parcel requires explicit acknowledgement. A stale parcel version or a repeated final decision is blocked. Reject a stale request with a reason and submit a fresh one.
 
-## 5. Import a state dataset
+## 6. Import a state dataset
 
 Choose Platform administrator demo and open Data exchange. Select a state adapter, then Load sample template, or open a JSON file below 900 KB.
 
@@ -56,7 +66,7 @@ Tamil Nadu hectares are multiplied by 10,000; Andhra Pradesh acres by 4,046.8564
 
 Maximum 200 rows per batch. Duplicate IDs, missing fields and invalid coordinate rings block the batch. Import is transactional and never overwrites existing parcels. These adapters demonstrate configurable formats; they are not official state API schemas.
 
-## 6. Simulate an outage and retry
+## 7. Simulate an outage and retry
 
 Approve a review stage to create a department delivery event. As Platform administrator, open Department sync.
 
@@ -64,7 +74,7 @@ Select Simulate outage on a pending event. It becomes Failed and retains its att
 
 Process pending handles up to 10 events at a time. Delivered events are not replayed. Older source versions cannot replace newer deliveries. An adapter failure does not undo a committed officer decision. No government API is contacted.
 
-## 7. Use governance insights
+## 8. Use governance insights
 
 Filter by state to inspect land-use counts, dispute flags, illustrative tax dues and quality findings. Service outcome counts are labelled all-state.
 
@@ -72,7 +82,7 @@ The checker compares area and rights-holder values across source records and fla
 
 These are deterministic review indicators, not fraud predictions, ownership decisions or legal conclusions. Conflicting values remain visible instead of being silently replaced.
 
-## 8. Run a ten-minute demo
+## 9. Run a ten-minute demo
 
 Minutes 1–2: explore URB-002, the source records and map overlays. Minutes 3–4: submit Registration & mutation as a citizen with a new sample rights holder.
 
@@ -80,7 +90,7 @@ Minutes 5–6: approve in Registration, then Revenue, then Tax. Show that the ri
 
 Minute 8: simulate a delivery outage and retry it. Minute 9: preview a Tamil Nadu import and its hectare conversion. Minute 10: show source conflicts and explain the real-world integration boundaries.
 
-## 9. Fix common problems
+## 10. Fix common problems
 
 First visit is slow: the free hosting service may be waking; allow time and refresh. No request in an officer queue: use the assigned department and state, or administrator demo.
 
@@ -90,7 +100,7 @@ Source values still differ: inspect Department sync and deliver pending events, 
 
 Map tiles unavailable: use the searchable parcel directory. The basemap depends on an external provider. Do not repeat a submission immediately; check My applications first.
 
-## 10. Know the boundaries
+## 11. Know the boundaries
 
 Bhoomi is a functioning SIH26014 prototype with synthetic parcels, public demo departments and local mock adapters. It does not provide legal-title verification, official ULPIN issuance, government transactions, document uploads, payments, satellite change detection or a trained predictive model.
 

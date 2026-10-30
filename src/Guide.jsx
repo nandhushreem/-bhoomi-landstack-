@@ -33,7 +33,7 @@ export default function Guide({ navigate }) {
           </a>
         </div>
         <div className="guide-cover-note">
-          Version 2 · SIH26014 · Synthetic data · 30 October 2026
+          Version 2.1 · SIH26014 · Synthetic data · 30 October 2026
         </div>
       </div>
       <div className="guide-caution">
