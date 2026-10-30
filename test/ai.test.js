@@ -115,5 +115,6 @@ test("installed AI SDK sends a server-authenticated OpenRouter completion and pa
     ),
   );
   assert.ok(response.answer.includes("817"));
+  assert.equal(/\[S\d+\]/.test(response.answer), false);
   assert.equal(response.answer.includes("test-server-secret"), false);
 });

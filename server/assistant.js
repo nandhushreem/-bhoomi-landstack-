@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import { pool } from "./db.js";
-import { services, profiles } from "./domain.js";
+import { services, profiles, departments } from "./domain.js";
 import { guideSections } from "../src/guide-content.js";
 import {
   aiConfiguration,
@@ -163,6 +163,7 @@ assistant.post("/ai/chat", auth, chatLimit, async (req, res) => {
       : null,
     records,
     services,
+    department_names: departments,
     state_profiles: Object.fromEntries(
       Object.entries(profiles).map(([k, v]) => [
         k,

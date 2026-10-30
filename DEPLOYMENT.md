@@ -25,6 +25,8 @@ Version 2 verification: seven unit checks, production build and zero reported pr
 
 Version 2.1 adds five AI unit/SDK-contract checks and a separate assistant browser check. Local verification confirms safe key handling, invalid-input rejection, SDK request parsing, guest sign-in return, answer/source rendering, mobile layout and explicit provider/local response labels. Live key/model verification is performed after deployment and must be reported according to the actual result.
 
+Live v2.1 verification on 30 October 2026: the deployed server detected its OpenRouter key, OpenRouter accepted authentication, and the unmocked frontend test received real AI-mode responses for English parcel information and a Telugu workflow question. The public app's full browser flow and 79 HTTP checks also passed. No manual key update was needed after the AI integration was deployed.
+
 Guide: https://bhoomi-landstack.onrender.com/#guide
 
 PDF: https://bhoomi-landstack.onrender.com/bhoomi-user-guide.pdf

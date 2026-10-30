@@ -82,6 +82,7 @@ try {
   await page.getByRole("button", { name: "Send", exact: true }).click();
   const j2 = await (await second).json();
   assert.ok(j2.answer);
+  assert.match(j2.answer, /[\u0C00-\u0C7F]/);
   await page.locator(".chat-message.assistant").nth(1).waitFor();
   if (process.env.REQUIRE_AI === "1")
     assert.equal(j2.mode, "ai", JSON.stringify(j2.providerProblem));
