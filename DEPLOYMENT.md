@@ -27,6 +27,8 @@ Version 2.1 adds five AI unit/SDK-contract checks and a separate assistant brows
 
 Live v2.1 verification on 30 October 2026: the deployed server detected its OpenRouter key, OpenRouter accepted authentication, and the unmocked frontend test received real AI-mode responses for English parcel information and a Telugu workflow question. The public app's full browser flow and 79 HTTP checks also passed. No manual key update was needed after the AI integration was deployed.
 
+Map repair: the deployed `Referrer-Policy: no-referrer` suppressed the Referer required by the former OSM raster provider. The app now uses an attributed OpenFreeMap/MapLibre vector basemap, a bundled same-origin worker and `strict-origin-when-cross-origin`. A provider error, unavailable WebGL or initial-load timeout leaves parcel boundaries and records usable with a manual retry. A focused fixture browser check verifies rendering, CSP, navigation cleanup, forced HTTP 403, retry recovery and mobile layout without fetching public tiles. Workflow browser checks also use a local basemap fixture. Use `MAP_LIVE=1 TEST_BASE_URL=https://bhoomi-landstack.onrender.com node test/map-browser.mjs` for one initial-viewport public-provider check; it performs no scripted panning, zoom sweep or bulk download.
+
 Guide: https://bhoomi-landstack.onrender.com/#guide
 
 PDF: https://bhoomi-landstack.onrender.com/bhoomi-user-guide.pdf

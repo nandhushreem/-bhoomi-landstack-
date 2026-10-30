@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { pool } from "../server/db.js";
 import { sourceRecords } from "../server/seed.js";
+import { fixtureMap } from "./map-fixture.mjs";
 const base = process.env.TEST_BASE_URL || "http://127.0.0.1:3000";
 const browser = await chromium.launch({ headless: true });
 const ctx = await browser.newContext({
@@ -21,6 +22,8 @@ const page = await ctx.newPage(),
   importIds = [],
   batchIds = [];
 let baseline, fixtureId;
+await fixtureMap(ctx);
+await fixtureMap(staff);
 for (const p of [page, off]) p.on("pageerror", (e) => errors.push(e.message));
 await mkdir("test-results", { recursive: true });
 async function role(dept) {

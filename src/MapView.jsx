@@ -1,7 +1,12 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
+import { maplibreGL } from "@maplibre/maplibre-gl-leaflet";
+import { setWorkerUrl } from "maplibre-gl";
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import "leaflet/dist/leaflet.css";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { zoneColors } from "./api";
+setWorkerUrl(workerUrl);
 export default function MapView({
   parcels,
   selected,
@@ -16,18 +21,21 @@ export default function MapView({
     selection = useRef(),
     extra = useRef();
   const choose = useRef(onSelect);
+  const [basemapStatus, setBasemapStatus] = useState("loading");
+  const [attempt, setAttempt] = useState(0);
   choose.current = onSelect;
   useEffect(() => {
-    map.current = L.map(container.current, { zoomControl: false }).setView(
-      [12.973, 77.596],
-      16,
-    );
-    L.control.zoom({ position: "bottomright" }).addTo(map.current);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution:
-        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    map.current = L.map(container.current, {
+      zoomControl: false,
+      minZoom: 2,
       maxZoom: 19,
-    }).addTo(map.current);
+      maxBounds: [
+        [-85, -Infinity],
+        [85, Infinity],
+      ],
+      maxBoundsViscosity: 1,
+    }).setView([12.973, 77.596], 16);
+    L.control.zoom({ position: "bottomright" }).addTo(map.current);
     const observer = new ResizeObserver(() => map.current?.invalidateSize());
     observer.observe(container.current);
     return () => {
@@ -36,6 +44,58 @@ export default function MapView({
       map.current = null;
     };
   }, []);
+  useEffect(() => {
+    const leaflet = map.current;
+    let basemap,
+      gl,
+      disposed = false,
+      failed = false;
+    setBasemapStatus("loading");
+    const unavailable = () => {
+      if (disposed || failed) return;
+      failed = true;
+      clearTimeout(timeout);
+      setBasemapStatus("unavailable");
+      // Defer removal until the renderer has finished dispatching its event.
+      queueMicrotask(() => {
+        if (!disposed) basemap?.remove();
+      });
+    };
+    const ready = () => {
+      if (disposed || failed) return;
+      clearTimeout(timeout);
+      setBasemapStatus("ready");
+    };
+    const timeout = setTimeout(unavailable, 20000);
+    try {
+      // Detect unsupported browsers before the Leaflet adapter adds a layer.
+      const probe = document.createElement("canvas").getContext("webgl2");
+      if (!probe) throw new Error("WebGL unavailable");
+      probe.getExtension("WEBGL_lose_context")?.loseContext();
+      basemap = maplibreGL({
+        style: "https://tiles.openfreemap.org/styles/positron",
+        attributionControl: {
+          customAttribution:
+            '<a href="https://openfreemap.org/">OpenFreeMap</a> · © <a href="https://openmaptiles.org/">OpenMapTiles</a> · © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        },
+      });
+      basemap.addTo(leaflet);
+      gl = basemap.getMaplibreMap();
+      gl.once("idle", ready);
+      gl.on("error", unavailable);
+      gl.getCanvas().addEventListener("webglcontextlost", unavailable);
+    } catch {
+      unavailable();
+    }
+    return () => {
+      disposed = true;
+      clearTimeout(timeout);
+      gl?.off("idle", ready);
+      gl?.off("error", unavailable);
+      gl?.getCanvas().removeEventListener("webglcontextlost", unavailable);
+      basemap?.remove();
+    };
+  }, [attempt]);
   useEffect(() => {
     if (!map.current) return;
     polygons.current?.remove();
@@ -115,10 +175,27 @@ export default function MapView({
     ).addTo(map.current);
   }, [overlays, visibleOverlays]);
   return (
-    <div
-      ref={container}
-      className="map-canvas"
-      aria-label="Interactive synthetic land parcel map"
-    />
+    <>
+      <div
+        ref={container}
+        className="map-canvas"
+        data-basemap-status={basemapStatus}
+        aria-label="Interactive synthetic land parcel map"
+      />
+      {basemapStatus !== "ready" && (
+        <div className="map-service-status" role="status">
+          <span>
+            {basemapStatus === "loading"
+              ? "Loading background map…"
+              : "Background map unavailable. Parcel records and boundaries are still available."}
+          </span>
+          {basemapStatus === "unavailable" && (
+            <button type="button" onClick={() => setAttempt((n) => n + 1)}>
+              Retry map
+            </button>
+          )}
+        </div>
+      )}
+    </>
   );
 }

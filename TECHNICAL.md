@@ -4,7 +4,9 @@ SIH26014 · Updated 30 October 2026 · Functional synthetic-data prototype
 
 ## 1. Architecture
 
-React/Vite browser client → Express JSON API → PostgreSQL. A single Render Node service serves static assets and APIs. Lazy-loaded screens separate parcel exploration, citizen requests, governance insights, data exchange, integration operations and the guide. Leaflet renders GeoJSON over an attributed OpenStreetMap basemap. Backend modules separate authentication/server setup, workflow, domain validation and platform interfaces.
+React/Vite browser client → Express JSON API → PostgreSQL. A single Render Node service serves static assets and APIs. Lazy-loaded screens separate parcel exploration, citizen requests, governance insights, data exchange, integration operations and the guide. Leaflet renders GeoJSON over an attributed OpenFreeMap vector basemap using MapLibre, with OpenMapTiles and OpenStreetMap data credits. Backend modules separate authentication/server setup, workflow, domain validation and platform interfaces.
+
+The basemap uses no API key and is independent of parcel records. A provider failure, 20-second initial-load timeout or unavailable WebGL produces a parcel-only view with a manual retry. CSP allows only the configured map host and a bundled same-origin renderer worker. The referrer policy sends only the website origin for cross-origin HTTPS requests. Automated workflow tests use local map fixtures; `node test/map-browser.mjs` verifies rendering, failed-provider recovery and mobile layout without requesting public tiles. An explicit `MAP_LIVE=1` check renders only the initial viewport against the public provider.
 
 All application tables use the isolated `bhoomi` schema. No unrelated database objects are changed. Additive startup initialization runs in a transaction with a PostgreSQL advisory lock. Existing parcels are preserved; only missing seed IDs are inserted.
 

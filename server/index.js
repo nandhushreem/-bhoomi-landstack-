@@ -22,13 +22,15 @@ app.set("trust proxy", 1);
 app.disable("x-powered-by");
 app.use(
   helmet({
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "https://*.tile.openstreetmap.org"],
-        connectSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "blob:", "https://tiles.openfreemap.org"],
+        connectSrc: ["'self'", "https://tiles.openfreemap.org"],
+        workerSrc: ["'self'"],
         fontSrc: ["'self'"],
         objectSrc: ["'none'"],
         upgradeInsecureRequests:
