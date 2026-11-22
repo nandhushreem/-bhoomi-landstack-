@@ -61,7 +61,7 @@ const pages = {
   assistant: {
     name: "Bhoomi AI",
     title: "Land records, explained.",
-    sub: "Ask about a parcel or service in English or Telugu.",
+    sub: "Ask about a parcel or service in English, Telugu or Kannada.",
     eyebrow: "AI HELP. REAL APPLICATION CONTEXT.",
     icon: Sparkles,
   },
@@ -805,3 +805,4 @@ function About({ navigate }) {
     </>
   );
 }
+
