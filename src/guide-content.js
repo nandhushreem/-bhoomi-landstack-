@@ -2,7 +2,7 @@ export const guideSections = [
   [
     "Ask Bhoomi AI",
     [
-      "Open Bhoomi AI in the sidebar. Enter a citizen or officer workspace, choose an optional parcel context and select English or Telugu. Type a question and select Send. Source buttons open the relevant parcel or user guide.",
+      "Open Bhoomi AI in the sidebar. Enter a citizen or officer workspace, choose an optional parcel context and select English, Telugu or Kannada. Parcel choices are grouped by state, including Karnataka. Type a question and select Send. Source buttons open the relevant parcel or user guide.",
       "AI uses OpenRouter through the server. Your question and selected synthetic source records are sent to the provider. Never include confidential information. The assistant explains records and steps; it cannot submit, approve or change anything.",
       "If AI is unavailable, the app clearly labels its response as Local guide and shows the connection problem. It does not pretend the local response came from an AI model.",
       "For setup, add OPENROUTER_API_KEY in the bhoomi-landstack Render service’s Environment, then save and deploy. An optional OPENROUTER_MODEL selects another valid text model; the default openrouter/free uses the free router. Platform administrator can select Test server key. Invalid-key, credit, permission, rate-limit, model and timeout errors have specific recovery steps.",
@@ -94,3 +94,4 @@ export const guideSections = [
     ],
   ],
 ];
+
