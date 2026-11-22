@@ -11,12 +11,26 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { api, post } from "./api";
-const samples = [
-  "Explain this parcel and its review indicators.",
-  "How does Registration & mutation work?",
-  "Why do source records show different areas?",
-  "How can I import Tamil Nadu records?",
-];
+const samples = {
+  en: [
+    "Explain this Karnataka parcel and its review indicators.",
+    "How does Registration & mutation work?",
+    "Why do source records show different areas?",
+    "How can I import Tamil Nadu records?",
+  ],
+  te: [
+    "ఈ Karnataka parcel వివరాలు, review సూచనలు చెప్పండి.",
+    "Registration & mutation ఎలా పనిచేస్తుంది?",
+    "వేర్వేరు recordsలో area ఎందుకు వేరుగా ఉంది?",
+    "Tamil Nadu records ఎలా import చేయాలి?",
+  ],
+  kn: [
+    "ಈ ಕರ್ನಾಟಕದ parcel ವಿವರಗಳನ್ನು ಸರಳವಾಗಿ ವಿವರಿಸಿ.",
+    "Registration & mutation ಹೇಗೆ ಕೆಲಸ ಮಾಡುತ್ತದೆ?",
+    "ಬೇರೆ ಬೇರೆ records ನಲ್ಲಿ area ಏಕೆ ಬೇರೆ ಇದೆ?",
+    "ನನ್ನ parcel request ಸ್ಥಿತಿ ಎಲ್ಲಿ ನೋಡಬಹುದು?",
+  ],
+};
 export default function Assistant({
   data,
   user,
@@ -36,6 +50,12 @@ export default function Assistant({
     [checking, setChecking] = useState(false);
   const controller = useRef(),
     bottom = useRef();
+  const parcelsByState = data.parcels.reduce((groups, p) => {
+    const state = p.state_name || p.state || "Other";
+    (groups[state] ||= []).push(p);
+    return groups;
+  }, {});
+  const stateOrder = ["Karnataka", "Tamil Nadu", "Andhra Pradesh"];
   async function load() {
     try {
       setStatus(await api("/ai/status"));
@@ -158,11 +178,21 @@ export default function Assistant({
               onChange={(e) => setParcel(e.target.value)}
             >
               <option value="">General application help</option>
-              {data.parcels.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.id} · {p.locality}
-                </option>
-              ))}
+              {Object.entries(parcelsByState)
+                .sort(
+                  ([a], [b]) =>
+                    (stateOrder.indexOf(a) < 0 ? 99 : stateOrder.indexOf(a)) -
+                    (stateOrder.indexOf(b) < 0 ? 99 : stateOrder.indexOf(b)),
+                )
+                .map(([state, parcels]) => (
+                  <optgroup key={state} label={state}>
+                    {parcels.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.locality} · {p.id}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
             </select>
           </label>
           <label>
@@ -174,6 +204,7 @@ export default function Assistant({
             >
               <option value="en">English</option>
               <option value="te">తెలుగు · Telugu</option>
+              <option value="kn">ಕನ್ನಡ · Kannada</option>
             </select>
           </label>
         </div>
@@ -210,7 +241,7 @@ export default function Assistant({
                 specific context.
               </p>
               <div className="assistant-prompts">
-                {samples.map((q) => (
+                {(samples[language] || samples.en).map((q) => (
                   <button
                     key={q}
                     onClick={() => {
@@ -295,7 +326,9 @@ export default function Assistant({
             placeholder={
               language === "te"
                 ? "మీ question ఇక్కడ రాయండి…"
-                : "Ask about a parcel, source mismatch or application step…"
+                : language === "kn"
+                  ? "ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ಇಲ್ಲಿ ಬರೆಯಿರಿ…"
+                  : "Ask about a parcel, source mismatch or application step…"
             }
             onKeyDown={(e) => {
               if (
@@ -439,3 +472,4 @@ export default function Assistant({
     </div>
   );
 }
+
